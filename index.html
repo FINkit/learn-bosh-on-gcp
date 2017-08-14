@@ -574,6 +574,12 @@ app/guid-2  unresponsive agent  10.0.0.11
 
 <p>Cloud check command allows to manually resolve issues when resources (VMs and persistent disks) are in a bad state. Run <b>bosh instances</b> to see all instances running again.</p>
 
+<p>Now let's re-enable automatic repair for completeness.</p>
+
+<div class="terminal-block">
+  <h4 class="terminal-code-text">$ bosh update-resurrection on</h4>
+</div>
+
 <p>Learn more:
 <ul>
 <li><a href="http://bosh.io/docs/resurrector.html">bosh.io: Automatic repair with Resurrector</a></li>
