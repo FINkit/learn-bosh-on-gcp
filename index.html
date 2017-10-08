@@ -37,7 +37,9 @@
 
 <p>Prerequisites:
 <ul>
-  <li>A GCP account (at the time of writing a <a href="https://cloud.google.com/free/">Free Tier</a> is available)</li>
+  <li>A GCP account (at the time of writing a <a href="https://cloud.google.com/free/">Free Tier</a> is available). However, EU residents are not currently able to use the Free Tier as individuals. This is discussed in <a href="https://cloud.google.com/free/docs/frequently-asked-questions">Google's Cloud Platform Free Tier FAQ</a> and on <a href="https://www.quora.com/Is-there-any-way-to-use-Google-Cloud-Platform-as-individual-in-Europe">Quora</a>.</li>
+  <li>A local installation of <a href="https://www.terraform.io/">Terraform</a> on your environment PATH. <a href="https://releases.hashicorp.com/terraform/0.9.11/">Version 0.9.11</a> is known to work with the instructions in this guide.</li>
+  <li>An environment on which to run BASH scripts.</li>
 </ul>
 </p>
 
@@ -83,7 +85,7 @@
   <h4 class="terminal-code-text">$ gcloud init</h4>
 </div>
 
-<p>To create a GCP Project and BOSH Bastion, clone the <a href="https://github.com/finkit/bosh-on-gcp">bosh-on-gcp</a> repository and execute the <code>create-project.sh</code> <code>build-bosh-resources.sh</code> scripts:</p>
+<p>To create a GCP Project and BOSH Bastion, clone the <a href="https://github.com/finkit/bosh-on-gcp">bosh-on-gcp</a> repository and execute the <code>create-project.sh</code> and <code>build-bosh-resources.sh</code> scripts:</p>
 <div class="terminal-block">
   <h4 class="terminal-code-text">$ git clone https://github.com/finkit/bosh-on-gcp</h4>
   <h4 class="terminal-code-text">$ cd bosh-on-gcp</h4>
@@ -91,6 +93,9 @@
   <h4 class="terminal-code-text">$ cd terraform</h4>
   <h4 class="terminal-code-text">$ ./build-bosh-resources.sh -p &lt;GCP_PROJECT&gt;</h4>
 </div>
+
+<p>Should the <code>build-bosh-resources.sh</code> script fail with an error indicating that the region required field is not set, use the command <code>"gcloud config set compute/region &lt;GCP_PROJECT_REGION&gt;"</code> (where &lt;GCP_PROJECT_REGION&gt; is the region for your project, e.g. europe-west2).</p>
+<p>Should the <code>build-bosh-resources.sh</code> script fail with an error loading the zone, use the command <code>"gcloud config set compute/zone &lt;GCP_PROJECT_ZONE&gt;"</code> (where &lt;GCP_PROJECT_ZONE&gt; is the zone for your project, e.g. europe-west2-a).</p>
 
 <p>Learn more:
 <ul>
@@ -188,7 +193,7 @@ Succeeded</h4>
 </ul>
 </p>
 
-<button onClick="$.fn.fullpage.moveSlideRight();" id="next-button">Next</button>
+<button onClick="$.fn.fullpage.moveSectionDown();" id="next-button">Next</button>
 </div></div>
     
     <div class="section deploy"><div class="center-column"><div class="view-heading">
@@ -249,6 +254,8 @@ learn-bosh-on-gcp  0+dev.1  [your commit hash]
 <div class="terminal-block">
   <h4 class="terminal-code-text">$ bosh upload-stemcell https://s3.amazonaws.com/bosh-core-stemcells/google/bosh-stemcell-3431.10-google-kvm-ubuntu-trusty-go_agent.tgz</h4>
 </div>
+
+<p>The attempt to upload the stemcell may fail due to the Cloud Storage JSON API not being enabled for your project. In this case, the response from the upload-stemcell command should include a link to the Google Developer Console, which can be used to enable this API. Alternatively, run the command <code>"gcloud service-management enable storage-api.googleapis.com"</code>.</p>
 
 <p>Check uploaded stemcells:</p>
 <div class="terminal-block">
@@ -452,7 +459,7 @@ Succeeded</h4>
 
 <p>Every release can specify a set of properties that need to be set in deployment manifest and provided to service. For example, that can be database credentials, address of another service, etc.</p>
 
-<p>Our release allows to change property port on which server is listening. You can see the list of properties that can be modified in learn-bosh-release/jobs/app/spec. Let's open manifest.yml and under the section properties set the value of port to 8888:</p>
+<p>Our release allows to change property port on which server is listening. You can see the list of properties that can be modified in learn-bosh-release/jobs/app/spec. Let's open manifest.yml and under the section properties set the value of port to 8888 - not forgetting to remove the curly brackets after properties (representing the formerly empty set):</p>
 <div class="terminal-block">
   <h4 class="terminal-code-text">...
   jobs:
@@ -511,7 +518,7 @@ System 'system_localhost'           running
 <p>In a separate window (on host) let's kill our runnning server:</p>
 
 <div class="terminal-block">
-  <h4 class="terminal-code-text">$ curl 10.0.0.11:8888/kill</h4>
+  <h4 class="terminal-code-text">$ curl 10.0.0.10:8888/kill</h4>
 </div>
 
 <p>Back in the instance window notice that monit will report process as 'Does not exist' and after some period service will be brought back up by monit again.</p>
@@ -541,10 +548,11 @@ System 'system_localhost'           running
   <h4 class="terminal-code-text">$ gcloud compute ssh bosh-bastion</h4>
 </div>
 
-<p>Delete one of the instances.</p>
+<p>Delete the second instance - the name of this VM instance can be found under the NAME column from the output of the first command below.</p>
 
 <div class="terminal-block">
-  <h4 class="terminal-code-text">$ gcloud compute instances delete id-1</h4>
+  <h4 class="terminal-code-text">$ gcloud compute instances list</h4>
+  <h4 class="terminal-code-text">$ gcloud compute instances delete NAME_OF_SECOND_VM_INSTANCE</h4>
 </div>
 
 <p>Let's see that one of the instances is in a bad state:</p>
@@ -667,6 +675,8 @@ app/guid-2  unresponsive agent  10.0.0.11
 <p>In this tutorial we created a BOSH Bastion in Google Cloud Platform and used the BOSH CLI on that bastion to create a BOSH Director. We deployed a release, updated our deployment with source changes, scaled the number of services and changed their properties on that BOSH Director. We also recovered a failing service, failing VM and failing deploy.</p>
 
 <p>The BOSH Director can work with any CPI (Cloud Provider Interface) that implements a certain API to manage IaaS resources. There are several supported CPIs for different IaaS providers: AWS, GCP, Openstack, vSphere, vCloud and VirtualBox (a.k.a. BOSH Lite). You can read more about CPIs here: <a href="http://bosh.io/docs/cpi-api-v1.html">http://bosh.io/docs/cpi-api-v1.html</a>.</p>
+
+<p><b>To avoid consuming credits from your GCP account, don't forget to tear down all the instances in your project.</b></p>
 
 <p>Learn more:
 <ul>
