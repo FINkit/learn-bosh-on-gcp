@@ -2,7 +2,7 @@
 
 <p>Every release can specify a set of properties that need to be set in deployment manifest and provided to service. For example, that can be database credentials, address of another service, etc.</p>
 
-<p>Our release allows to change property port on which server is listening. You can see the list of properties that can be modified in learn-bosh-release/jobs/app/spec. Let's open manifest.yml and under the section properties set the value of port to 8888:</p>
+<p>Our release allows to change property port on which server is listening. You can see the list of properties that can be modified in learn-bosh-release/jobs/app/spec. Let's open manifest.yml and under the section properties set the value of port to 8888 - not forgetting to remove the curly brackets after properties (representing the formerly empty set):</p>
 <div class="terminal-block">
   <h4 class="terminal-code-text">...
   jobs:
