@@ -7,7 +7,7 @@
   <h4 class="terminal-code-text">$ gcloud init</h4>
 </div>
 
-<p>To create a GCP Project and BOSH Bastion, clone the <a href="https://github.com/finkit/bosh-on-gcp">bosh-on-gcp</a> repository and execute the <code>create-project.sh</code> <code>build-bosh-resources.sh</code> scripts:</p>
+<p>To create a GCP Project and BOSH Bastion, clone the <a href="https://github.com/finkit/bosh-on-gcp">bosh-on-gcp</a> repository and execute the <code>create-project.sh</code> and <code>build-bosh-resources.sh</code> scripts:</p>
 <div class="terminal-block">
   <h4 class="terminal-code-text">$ git clone https://github.com/finkit/bosh-on-gcp</h4>
   <h4 class="terminal-code-text">$ cd bosh-on-gcp</h4>
@@ -15,6 +15,9 @@
   <h4 class="terminal-code-text">$ cd terraform</h4>
   <h4 class="terminal-code-text">$ ./build-bosh-resources.sh -p &lt;GCP_PROJECT&gt;</h4>
 </div>
+
+<p>Should the <code>build-bosh-resources.sh</code> script fail with an error indicating that the region required field is not set, use the command <code>"gcloud config set compute/region &lt;GCP_PROJECT_REGION&gt;"</code> (where &lt;GCP_PROJECT_REGION&gt; is the region for your project, e.g. europe-west2).</p>
+<p>Should the <code>build-bosh-resources.sh</code> script fail with an error loading the zone, use the command <code>"gcloud config set compute/zone &lt;GCP_PROJECT_ZONE&gt;"</code> (where &lt;GCP_PROJECT_ZONE&gt; is the zone for your project, e.g. europe-west2-a).</p>
 
 <p>Learn more:
 <ul>
