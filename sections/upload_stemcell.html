@@ -7,6 +7,8 @@
   <h4 class="terminal-code-text">$ bosh upload-stemcell https://s3.amazonaws.com/bosh-core-stemcells/google/bosh-stemcell-3431.10-google-kvm-ubuntu-trusty-go_agent.tgz</h4>
 </div>
 
+<p>The attempt to upload the stemcell may fail due to the Cloud Storage JSON API not being enabled for your project. In this case, the response from the upload-stemcell command should include a link to the Google Developer Console, which can be used to enable this API. Alternatively, run the command <code>"gcloud service-management enable storage-api.googleapis.com"</code>.</p>
+
 <p>Check uploaded stemcells:</p>
 <div class="terminal-block">
   <h4 class="terminal-code-text">$ bosh stemcells</h4>
