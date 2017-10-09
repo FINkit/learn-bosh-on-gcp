@@ -8,10 +8,11 @@
   <h4 class="terminal-code-text">$ gcloud compute ssh bosh-bastion</h4>
 </div>
 
-<p>Delete one of the instances.</p>
+<p>Delete the second instance - the name of this VM instance can be found under the NAME column from the output of the first command below.</p>
 
 <div class="terminal-block">
-  <h4 class="terminal-code-text">$ gcloud compute instances delete id-1</h4>
+  <h4 class="terminal-code-text">$ gcloud compute instances list</h4>
+  <h4 class="terminal-code-text">$ gcloud compute instances delete NAME_OF_SECOND_VM_INSTANCE</h4>
 </div>
 
 <p>Let's see that one of the instances is in a bad state:</p>
