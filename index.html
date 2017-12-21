@@ -17,8 +17,8 @@
           navigationPosition: 'right',
           scrollOverflow: true,
           css3: false,
-          anchors: ["introduction", "prepare", "create_bosh_bastion", "create_bosh_director", "log_in", "deploy", "create_release", "upload_stemcell", "update_cloud_config", "run_deploy", "modify", "modify_release", "scale", "change_properties", "when_something_goes_wrong", "failing_service", "failing_vm", "failing_deploy", "done"],
-          navigationTooltips: ["Introduction", "Prepare", "Create BOSH Bastion", "Create BOSH Director", "Log in", "Deploy", "Create release", "Upload stemcell", "Update cloud config", "Run deploy", "Modify deployment", "Modify release", "Scale", "Change properties", "When something goes wrong", "Failing service", "Failing VM", "Failing deploy", "Done!"],
+          anchors: ["introduction", "prepare", "create_google_cloud_project", "create_bosh_bastion", "create_bosh_director", "log_in", "deploy", "create_release", "upload_stemcell", "update_cloud_config", "run_deploy", "modify", "modify_release", "scale", "change_properties", "when_something_goes_wrong", "failing_service", "failing_vm", "failing_deploy", "done"],
+          navigationTooltips: ["Introduction", "Prepare", "Create Google Cloud Project", "Create BOSH Bastion", "Create BOSH Director", "Log in", "Deploy", "Create release", "Upload stemcell", "Update cloud config", "Run deploy", "Modify deployment", "Modify release", "Scale", "Change properties", "When something goes wrong", "Failing service", "Failing VM", "Failing deploy", "Done!"],
         });
     });
   </script>
@@ -38,7 +38,8 @@
 <p>Prerequisites:
 <ul>
   <li>A GCP account (at the time of writing a <a href="https://cloud.google.com/free/">Free Tier</a> is available). However, EU residents are not currently able to use the Free Tier as individuals. This is discussed in <a href="https://cloud.google.com/free/docs/frequently-asked-questions">Google's Cloud Platform Free Tier FAQ</a> and on <a href="https://www.quora.com/Is-there-any-way-to-use-Google-Cloud-Platform-as-individual-in-Europe">Quora</a>.</li>
-  <li>A local installation of <a href="https://www.terraform.io/">Terraform</a> on your environment PATH. <a href="https://releases.hashicorp.com/terraform/0.9.11/">Version 0.9.11</a> is known to work with the instructions in this guide.</li>
+  <li>A local installation of <a href="https://cloud.google.com/sdk/">Google Cloud SDK</a> on your environment PATH. Version 183.0.0 is known to work with the instructions in the guide.</li>
+  <li>A local installation of <a href="https://www.terraform.io/">Terraform</a> on your environment PATH. Version 0.11.1 is known to work with the instructions in this guide.</li>
   <li>An environment on which to run BASH scripts.</li>
 </ul>
 </p>
@@ -48,6 +49,7 @@
   <li><a href="https://cloud.google.com/getting-started/">cloud.google.com: Getting Started with Google Cloud Platform</a></li>
   <li><a href="http://bosh.io/docs/about.html">bosh.io: What is BOSH?</a></li>
   <li><a href="http://bosh.io/docs/problems.html">bosh.io: What Problems Does BOSH Solve?</a></li>
+  <li><a href="https://www.terraform.io/intro/index.html">terraform.io: Introduction to Terraform</a></li>
 </ul>
 </p>
 
@@ -74,28 +76,78 @@
     </div>
   </div>
   <div class="view-heading-text-container">
-    <h2>Create BOSH Bastion</h2>
+    <h2>Create Google Cloud Project</h2>
   </div>
 </div> 
 
-<p>The BOSH Bastion is the <i>jumpbox</i> we will use to access the BOSH Director, and the BOSH Environment in general. It is created using the Google Cloud SDK and <a href="https://www.terraform.io/">Terraform</a>. To install the Google Cloud SDK follow the instructions on the <a href="https://cloud.google.com/sdk/">Cloud SDK</a> page.</p>
-
-<p>Once the Cloud SDK is installed, initialize a gcloud session:</p>
+<p>Initialize a gcloud session:</p>
 <div class="terminal-block">
   <h4 class="terminal-code-text">$ gcloud init</h4>
 </div>
 
-<p>To create a GCP Project and BOSH Bastion, clone the <a href="https://github.com/finkit/bosh-on-gcp">bosh-on-gcp</a> repository and execute the <code>create-project.sh</code> and <code>build-bosh-resources.sh</code> scripts:</p>
+<p>Create a GCP Project (the project name must be unique) and assign it to a Billing Account:</p>
 <div class="terminal-block">
-  <h4 class="terminal-code-text">$ git clone https://github.com/finkit/bosh-on-gcp</h4>
-  <h4 class="terminal-code-text">$ cd bosh-on-gcp</h4>
-  <h4 class="terminal-code-text">$ ./create-project.sh -p &lt;GCP_PROJECT&gt;</h4>
-  <h4 class="terminal-code-text">$ cd terraform</h4>
-  <h4 class="terminal-code-text">$ ./build-bosh-resources.sh -p &lt;GCP_PROJECT&gt;</h4>
+  <h4 class="terminal-code-text">$ gcloud alpha projects create &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;--name=&lt;YOUR_GCP_PROJECT_NAME&gt; --set-as-default</h4>
+  <h4 class="terminal-code-text">$ gcloud alpha billing accounts projects link &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;--billing-account=&lt;YOUR_BILLING_ACCOUNT&gt;</h4>
 </div>
 
-<p>Should the <code>build-bosh-resources.sh</code> script fail with an error indicating that the region required field is not set, use the command <code>"gcloud config set compute/region &lt;GCP_PROJECT_REGION&gt;"</code> (where &lt;GCP_PROJECT_REGION&gt; is the region for your project, e.g. europe-west2).</p>
-<p>Should the <code>build-bosh-resources.sh</code> script fail with an error loading the zone, use the command <code>"gcloud config set compute/zone &lt;GCP_PROJECT_ZONE&gt;"</code> (where &lt;GCP_PROJECT_ZONE&gt; is the zone for your project, e.g. europe-west2-a).</p>
+<p>Enable the compute.googleapis.com, iam.googleapis.com>, cloudresourcemanager.googleapis.com and dns.googleapis.com Google Cloud APIs:</p>
+<div class="terminal-block">
+  <h4 class="terminal-code-text">$ gcloud beta --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;service-management enable compute.googleapis.com</h4>
+  <h4 class="terminal-code-text">$ gcloud beta --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;service-management enable iam.googleapis.com</h4>
+  <h4 class="terminal-code-text">$ gcloud beta --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;service-management enable cloudresourcemanager.googleapis.com</h4>
+  <h4 class="terminal-code-text">$ gcloud beta --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;service-management enable dns.googleapis.com</h4>
+</div>
+
+<p>Create a Service Account, e.g. <i>gcp-automated-user</i>, generate keys for that Service Account and make it a Project Owner:</p>
+<div class="terminal-block">
+  <h4 class="terminal-code-text">$ gcloud iam --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;service-accounts create gcp-automated-user \<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;--display-name=gcp-automated-user</h4>
+  <h4 class="terminal-code-text">$ gcloud iam --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;service-accounts keys create \<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;--iam-account=gcp-automated-user@&lt;YOUR_GCP_PROJECT_NAME&gt;.iam.gserviceaccount.com \<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;gcp-automated-user.key.json</h4>
+  <h4 class="terminal-code-text">$ gcloud projects add-iam-policy-binding &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;--member=serviceAccount:gcp-automated-user@&lt;YOUR_GCP_PROJECT_NAME&gt;.iam.gserviceaccount.com \<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;--role=roles/owner</h4>
+</div>
+
+<p>Learn more:
+<ul>
+  <li><a href="https://cloud.google.com/sdk/docs/">cloud.google.com: Cloud SDK</a></li>
+</ul>
+</p>
+</div></div>
+    
+    <div class="section prepare"><div class="center-column"><div class="view-heading">
+  <div class="circle-container">
+    <div class="circle-number">
+      <h2>2</h2>
+    </div>
+  </div>
+  <div class="view-heading-text-container">
+    <h2>Create BOSH Bastion</h2>
+  </div>
+</div> 
+
+<p>The BOSH Bastion is the <i>jumpbox</i> we will use to access the BOSH Director, and the BOSH Environment in general. It is created using <a href="https://www.terraform.io/">Terraform</a>.</p>
+
+<p>To create a BOSH Bastion, clone the <a href="https://github.com/finkit/bosh-on-gcp">bosh-on-gcp</a> repository and execute the <code>build-bosh-resources.sh</code> script:</p>
+<div class="terminal-block">
+  <h4 class="terminal-code-text">$ git clone https://github.com/finkit/bosh-on-gcp</h4>
+  <h4 class="terminal-code-text">$ cd bosh-on-gcp/terraform</h4>
+  <h4 class="terminal-code-text">$ ./build-bosh-resources.sh -p &lt;YOUR_GCP_PROJECT_NAME&gt;</h4>
+</div>
+
+<p>Should the <code>build-bosh-resources.sh</code> script fail with an error indicating that the region required field is not set, use the command <code>"gcloud config set compute/region &lt;YOUR_GCP_PROJECT_REGION&gt;"</code> (where &lt;YOUR_GCP_PROJECT_REGION&gt; is the region for your project, e.g. europe-west2).</p>
+<p>Should the <code>build-bosh-resources.sh</code> script fail with an error loading the zone, use the command <code>"gcloud config set compute/zone &lt;YOUR_GCP_PROJECT_ZONE&gt;"</code> (where &lt;YOUR_GCP_PROJECT_ZONE&gt; is the zone for your project, e.g. europe-west2-a).</p>
 
 <p>Learn more:
 <ul>
@@ -108,7 +160,7 @@
     <div class="section prepare"><div class="center-column"><div class="view-heading">
   <div class="circle-container">
     <div class="circle-number">
-      <h2>2</h2>
+      <h2>3</h2>
     </div>
   </div>
   <div class="view-heading-text-container">
@@ -138,7 +190,7 @@
     <div class="section prepare"><div class="center-column"><div class="view-heading">
   <div class="circle-container">
     <div class="circle-number">
-      <h2>3</h2>
+      <h2>4</h2>
     </div>
   </div>
   <div class="view-heading-text-container">
