@@ -5,24 +5,29 @@
   <h4 class="terminal-code-text">$ gcloud init</h4>
 </div>
 
-<p>Create a GCP Project (the project name must be unique) and assign it to a Billing Account:</p>
+<p>Create a GCP Project (the project name must be unique) and assign it to you Billing Account (you may be prompted to install the "alpha" component):</p>
 <div class="terminal-block">
   <h4 class="terminal-code-text">$ gcloud alpha projects create &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;--name=&lt;YOUR_GCP_PROJECT_NAME&gt; --set-as-default</h4>
-  <h4 class="terminal-code-text">$ gcloud alpha billing accounts projects link &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+  <h4 class="terminal-code-text">$ gcloud alpha billing projects link &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;--billing-account=&lt;YOUR_BILLING_ACCOUNT&gt;</h4>
 </div>
 
-<p>Enable the compute.googleapis.com, iam.googleapis.com>, cloudresourcemanager.googleapis.com and dns.googleapis.com Google Cloud APIs:</p>
+<p>NOTE: Your Billing Account can be discovered by using:</p>
+<div class="terminal-block">
+  <h4 class="terminal-code-text">$ gcloud alpha billing accounts list --format json</h4>
+</div>
+
+<p>Enable the compute.googleapis.com, iam.googleapis.com>, cloudresourcemanager.googleapis.com and dns.googleapis.com Google Cloud APIs (you may be prompted to install the "beta" component):</p>
 <div class="terminal-block">
   <h4 class="terminal-code-text">$ gcloud beta --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
-    &nbsp;&nbsp;&nbsp;&nbsp;service-management enable compute.googleapis.com</h4>
+    &nbsp;&nbsp;&nbsp;&nbsp;services enable compute.googleapis.com</h4>
   <h4 class="terminal-code-text">$ gcloud beta --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
-    &nbsp;&nbsp;&nbsp;&nbsp;service-management enable iam.googleapis.com</h4>
+    &nbsp;&nbsp;&nbsp;&nbsp;services enable iam.googleapis.com</h4>
   <h4 class="terminal-code-text">$ gcloud beta --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
-    &nbsp;&nbsp;&nbsp;&nbsp;service-management enable cloudresourcemanager.googleapis.com</h4>
+    &nbsp;&nbsp;&nbsp;&nbsp;services enable cloudresourcemanager.googleapis.com</h4>
   <h4 class="terminal-code-text">$ gcloud beta --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
-    &nbsp;&nbsp;&nbsp;&nbsp;service-management enable dns.googleapis.com</h4>
+    &nbsp;&nbsp;&nbsp;&nbsp;services enable dns.googleapis.com</h4>
 </div>
 
 <p>Create a Service Account, e.g. <i>gcp-automated-user</i>, generate keys for that Service Account and make it a Project Owner:</p>
