@@ -1,0 +1,40 @@
+<%= circled_title(1, "Create Google Cloud Network & Security") %>
+
+<p>This creates a VPC Network and subnetwork within the europe-west2 region.</p>
+<div class="terminal-block">
+  <h4 class="terminal-code-text">$ gcloud compute networks create bosh --subnet-mode custom</h4>
+  <h4 class="terminal-code-text">$ gcloud compute networks subnets create bosh-europe-west2 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--region=europe-west2 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--range=10.0.0.0/24 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--network=bosh</h4>
+</div>
+
+<p>Create a firewall rule allowing ssh access to the jumpbox instance:</p>
+<div class="terminal-block">
+   <h4 class="terminal-code-text">$ gcloud compute firewall-rules create ssh-to-jumpbox \<br/> 
+     &nbsp;&nbsp;&nbsp;&nbsp;--network bosh \<br/>
+     &nbsp;&nbsp;&nbsp;&nbsp;--allow tcp:22 \<br/>
+     &nbsp;&nbsp;&nbsp;&nbsp;--target-tags jumpbox</h4>
+</div>
+
+<p>Create a firewall rule allowing port 6868 to the jumpbox instance (this is used by the bosh client when creating the jumpbox instance):</p>
+<div class="terminal-block">
+   <h4 class="terminal-code-text">$ gcloud compute firewall-rules create mbus-to-jumpbox \<br/> 
+     &nbsp;&nbsp;&nbsp;&nbsp;--network bosh \<br/>
+     &nbsp;&nbsp;&nbsp;&nbsp;--allow tcp:6868 \<br/>
+     &nbsp;&nbsp;&nbsp;&nbsp;--target-tags jumpbox</h4>
+</div>
+
+<p>Create a firewall rule allowing internal traffic (TCP & UDP) on all ports:</p>
+<div class="terminal-block">
+   <h4 class="terminal-code-text">$ gcloud compute firewall-rules create intra-subnet-subnet-open \<br/>
+     &nbsp;&nbsp;&nbsp;&nbsp;--network bosh \<br/>
+     &nbsp;&nbsp;&nbsp;&nbsp;--allow tcp:1-65535,udp:1-65535 \</br>
+     &nbsp;&nbsp;&nbsp;&nbsp;--source-tags internal</h4>
+</div>
+
+<p>Learn more:
+<ul>
+  <li><a href="https://cloud.google.com/compute/docs/networks-and-firewalls">Google VPC Networks & Firewalls</a></li>
+</ul>
+</p>

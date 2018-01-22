@@ -20,8 +20,8 @@
 
 <p>Let's see that our property was changed:</p>
 <div class="terminal-block">
-  <h4 class="terminal-code-text">$ curl 10.0.0.10:8888</h4>
+  <h4 class="terminal-code-text">$ curl http://10.0.0.10:8888 --proxy socks5://127.0.0.1:5000</h4>
   <h4 class="terminal-printout-text">Hello, [your name] from &lt;uuid-1&gt;</h4>
-  <h4 class="terminal-code-text">$ curl 10.0.0.11:8888</h4>
+  <h4 class="terminal-code-text">$ curl http://10.0.0.11:8888 --proxy socks5://127.0.0.1:5000</h4>
   <h4 class="terminal-printout-text">Hello, [your name] from &lt;uuid-1&gt;</h4>
 </div>

@@ -1,0 +1,34 @@
+<%= circled_title(1, "Create Google Cloud NAT Instance") %>
+
+<p>Create a NAT instance.</p>
+<div class="terminal-block">
+  <h4 class="terminal-code-text">$ gcloud compute instances create nat-instance-primary \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--machine-type n1-standard-1 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--zone europe-west2-a \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--tags "nat,internal" \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--image ubuntu-1604-xenial-v20180109 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--image-project ubuntu-os-cloud \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--subnet bosh-europe-west2 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--can-ip-forward \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--tags nat \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--metadata startup-script='#!/bin/bash \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward" \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;iptables -t nat -A POSTROUTING -o ens4 -j MASQUERADE'</h4>
+</div>
+
+<p>Create a route through the NAT instance using the 'no-ip' network tag. Instances tagged with 'no-ip' will route traffic through the nat-instance-primary instance.</p>
+<div class="terminal-block">
+   <h4 class="terminal-code-text">$ gcloud compute routes create nat-primary \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--next-hop-instance nat-instance-primary \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--network bosh \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--tags no-ip \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--priority 800 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--next-hop-instance-zone europe-west2-a \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--destination-range 0.0.0.0/0 \</h4>
+</div>
+
+<p>Learn more:
+<ul>
+  <li><a href="https://cloud.google.com/vpc/docs/special-configurations#natgateway">Google Compute NAT Instances</a></li>
+</ul>
+</p>

@@ -1,16 +1,36 @@
 <%= circled_title(3, "Create BOSH Director") %>
 
-<p>To create the BOSH Director, ssh into the BOSH Bastion VM and execute the <code>create-bosh-director.sh</code> script:</p>
+<p>To create the BOSH Director, execute the following commands:</p>
 <div class="terminal-block">
-  <h4 class="terminal-code-text">$ gcloud compute ssh bosh-bastion</h4>
-  <h4 class="terminal-code-text">$ . ./create-bosh-director.sh</h4>
+  <h4 class="terminal-code-text">$ bosh int bosh-deployment/bosh.yml \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--vars-store=./director-creds.yml \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-o ./bosh-deployment/gcp/cpi.yml \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v director_name=gcpbosh \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v internal_cidr=10.0.0.0/24 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v internal_gw=10.0.0.1 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v internal_ip=10.0.0.6 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--var-file gcp_credentials_json=./my-service-account.key.json \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v project_id=&lt;PROJECT_ID&gt; \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v zone=europe-west2-a \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v tags=[internal,no-ip] \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v network=bosh \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v subnetwork=bosh-europe-west2</h4>
+
+  <h4 class="terminal-code-text">$ bosh create-env bosh-deployment/bosh.yml \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--state=./director-state.json \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--vars-store=./director-creds.yml \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-o ./bosh-deployment/gcp/cpi.yml \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v director_name=gcpbosh \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v internal_cidr=10.0.0.0/24 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v internal_gw=10.0.0.1 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v internal_ip=10.0.0.6 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--var-file gcp_credentials_json=./my-service-account.key.json \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v project_id=&lt;PROJECT_ID&gt; \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v zone=europe-west2-a \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v tags=[internal,no-ip] \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v network=bosh \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v subnetwork=bosh-europe-west2</h4>
 </div>
-
-<p>Note the extra leading '.' in front of the create-bosh-director.sh command, this is intentional and will cause the script to be run in the current shell.</p>
-
-<p>The creation of the BOSH Director will take a few minutes, and you will be prompted to enter the passphrase for the generation of a public/private rsa key pair.</p>
-
-<p>In case of any issues see <a href="https://github.com/finkit/bosh-on-gcp/terraform/README.md">bosh-on-gcp create BOSH Director</a> docs.</p>
 
 <p>Learn more:
 <ul>

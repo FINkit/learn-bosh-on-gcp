@@ -5,7 +5,9 @@
   "prepare" : {
     "prepare" : "Prepare",
     "create_google_cloud_project": "Create Google Cloud Project",
-    "create_bosh_bastion": "Create BOSH Bastion",
+    "create_google_cloud_network_and_security": "Create Google Cloud Network & Security",
+    "create_google_cloud_nat_instance": "Create Google Cloud NAT Instance",
+    "create_bosh_jumpbox": "Create BOSH Jumpbox",
     "create_bosh_director": "Create BOSH Director",
     "log_in": "Log in"
   },

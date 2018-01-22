@@ -17,8 +17,8 @@
           navigationPosition: 'right',
           scrollOverflow: true,
           css3: false,
-          anchors: ["introduction", "prepare", "create_google_cloud_project", "create_bosh_bastion", "create_bosh_director", "log_in", "deploy", "create_release", "upload_stemcell", "update_cloud_config", "run_deploy", "modify", "modify_release", "scale", "change_properties", "when_something_goes_wrong", "failing_service", "failing_vm", "failing_deploy", "done"],
-          navigationTooltips: ["Introduction", "Prepare", "Create Google Cloud Project", "Create BOSH Bastion", "Create BOSH Director", "Log in", "Deploy", "Create release", "Upload stemcell", "Update cloud config", "Run deploy", "Modify deployment", "Modify release", "Scale", "Change properties", "When something goes wrong", "Failing service", "Failing VM", "Failing deploy", "Done!"],
+          anchors: ["introduction", "prepare", "create_google_cloud_project", "create_google_cloud_network_and_security", "create_google_cloud_nat_instance", "create_bosh_jumpbox", "create_bosh_director", "log_in", "deploy", "create_release", "upload_stemcell", "update_cloud_config", "run_deploy", "modify", "modify_release", "scale", "change_properties", "when_something_goes_wrong", "failing_service", "failing_vm", "failing_deploy", "done"],
+          navigationTooltips: ["Introduction", "Prepare", "Create Google Cloud Project", "Create Google Cloud Network & Security", "Create Google Cloud NAT Instance", "Create BOSH Jumpbox", "Create BOSH Director", "Log in", "Deploy", "Create release", "Upload stemcell", "Update cloud config", "Run deploy", "Modify deployment", "Modify release", "Scale", "Change properties", "When something goes wrong", "Failing service", "Failing VM", "Failing deploy", "Done!"],
         });
     });
   </script>
@@ -39,7 +39,7 @@
 <ul>
   <li>A GCP account (at the time of writing a <a href="https://cloud.google.com/free/">Free Tier</a> is available). However, EU residents are not currently able to use the Free Tier as individuals. This is discussed in <a href="https://cloud.google.com/free/docs/frequently-asked-questions">Google's Cloud Platform Free Tier FAQ</a> and on <a href="https://www.quora.com/Is-there-any-way-to-use-Google-Cloud-Platform-as-individual-in-Europe">Quora</a>.</li>
   <li>A local installation of <a href="https://cloud.google.com/sdk/">Google Cloud SDK</a> on your environment PATH. Version 183.0.0 is known to work with the instructions in the guide.</li>
-  <li>A local installation of <a href="https://www.terraform.io/">Terraform</a> on your environment PATH. Version 0.11.1 is known to work with the instructions in this guide.</li>
+  <li>A local installation of <a href="https://bosh.io/docs/cli-v2.html">BOSH CLI v2</a> on your environment PATH. Version 2.0.45 is known to work with the instructions in this guide.</li>
   <li>An environment on which to run BASH scripts.</li>
 </ul>
 </p>
@@ -49,7 +49,6 @@
   <li><a href="https://cloud.google.com/getting-started/">cloud.google.com: Getting Started with Google Cloud Platform</a></li>
   <li><a href="http://bosh.io/docs/about.html">bosh.io: What is BOSH?</a></li>
   <li><a href="http://bosh.io/docs/problems.html">bosh.io: What Problems Does BOSH Solve?</a></li>
-  <li><a href="https://www.terraform.io/intro/index.html">terraform.io: Introduction to Terraform</a></li>
 </ul>
 </p>
 
@@ -58,7 +57,7 @@
     
     <div class="section prepare"><div class="center-column"><h1>Prepare</h1>
 
-<p>We are going to use the BOSH Environment created using the scripts in the <a href="https://github.com/finkit/bosh-on-gcp">bosh-on-gcp</a> repository. First we will create a BOSH Bastion in a dedicated GCP Project, the BOSH Bastion will have the BOSH CLI v2 installed. It is from this BOSH Bastion that we will create a BOSH Director. Once the BOSH Director is running we will use the BOSH CLI on the BOSH Bastion to send commands to the BOSH Director.</p>
+<p>We are going to create a BOSH Environment. First we will create the necessary infrastructure in GCP within a dedicated GCP Project, then create a BOSH Jumpbox using BOSH. We will then create a BOSH Director tunnelling connections through the BOSH Jumpbox executed from your host machine. Once the BOSH Director is running we will use the BOSH CLI to send commands through the BOSH Jumpbox to the BOSH Director.</p>
 
 <p>Learn more:
 <ul>
@@ -87,7 +86,7 @@
 
 <p>Create a GCP Project (the project name must be unique) and assign it to your Billing Account (you may be prompted to install the "alpha" component):</p>
 <div class="terminal-block">
-  <h4 class="terminal-code-text">$ gcloud alpha projects create &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+  <h4 class="terminal-code-text">$ gcloud projects create &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;--name=&lt;YOUR_GCP_PROJECT_NAME&gt; --set-as-default</h4>
   <h4 class="terminal-code-text">$ gcloud alpha billing projects link &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;--billing-account=&lt;YOUR_BILLING_ACCOUNT&gt;</h4>
@@ -98,29 +97,29 @@
   <h4 class="terminal-code-text">$ gcloud alpha billing accounts list --format json</h4>
 </div>
 
-<p>Enable the compute.googleapis.com, iam.googleapis.com>, cloudresourcemanager.googleapis.com and dns.googleapis.com Google Cloud APIs (you may be prompted to install the "beta" component):</p>
+<p>Enable the compute.googleapis.com, iam.googleapis.com, cloudresourcemanager.googleapis.com and dns.googleapis.com Google Cloud APIs:</p>
 <div class="terminal-block">
-  <h4 class="terminal-code-text">$ gcloud beta --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+  <h4 class="terminal-code-text">$ gcloud --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;services enable compute.googleapis.com</h4>
-  <h4 class="terminal-code-text">$ gcloud beta --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+  <h4 class="terminal-code-text">$ gcloud --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;services enable iam.googleapis.com</h4>
-  <h4 class="terminal-code-text">$ gcloud beta --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+  <h4 class="terminal-code-text">$ gcloud --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;services enable cloudresourcemanager.googleapis.com</h4>
-  <h4 class="terminal-code-text">$ gcloud beta --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+  <h4 class="terminal-code-text">$ gcloud --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;services enable dns.googleapis.com</h4>
 </div>
 
-<p>Create a Service Account, e.g. <i>gcp-automated-user</i>, generate keys for that Service Account and make it a Project Owner:</p>
+<p>Create a Service Account, e.g. <i>my-service-account</i>, generate keys for that Service Account and make it a Project Owner:</p>
 <div class="terminal-block">
   <h4 class="terminal-code-text">$ gcloud iam --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
-    &nbsp;&nbsp;&nbsp;&nbsp;service-accounts create gcp-automated-user \<br/>
-    &nbsp;&nbsp;&nbsp;&nbsp;--display-name=gcp-automated-user</h4>
+    &nbsp;&nbsp;&nbsp;&nbsp;service-accounts create my-service-account \<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;--display-name=my-service-account</h4>
   <h4 class="terminal-code-text">$ gcloud iam --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;service-accounts keys create \<br/>
-    &nbsp;&nbsp;&nbsp;&nbsp;--iam-account=gcp-automated-user@&lt;YOUR_GCP_PROJECT_NAME&gt;.iam.gserviceaccount.com \<br/>
-    &nbsp;&nbsp;&nbsp;&nbsp;gcp-automated-user.key.json</h4>
+    &nbsp;&nbsp;&nbsp;&nbsp;--iam-account=my-service-account@&lt;YOUR_GCP_PROJECT_NAME&gt;.iam.gserviceaccount.com \<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;my-service-account.key.json</h4>
   <h4 class="terminal-code-text">$ gcloud projects add-iam-policy-binding &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
-    &nbsp;&nbsp;&nbsp;&nbsp;--member=serviceAccount:gcp-automated-user@&lt;YOUR_GCP_PROJECT_NAME&gt;.iam.gserviceaccount.com \<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;--member=serviceAccount:my-service-account@&lt;YOUR_GCP_PROJECT_NAME&gt;.iam.gserviceaccount.com \<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;--role=roles/owner</h4>
 </div>
 
@@ -134,31 +133,156 @@
     <div class="section prepare"><div class="center-column"><div class="view-heading">
   <div class="circle-container">
     <div class="circle-number">
-      <h2>2</h2>
+      <h2>1</h2>
     </div>
   </div>
   <div class="view-heading-text-container">
-    <h2>Create BOSH Bastion</h2>
+    <h2>Create Google Cloud Network & Security</h2>
   </div>
 </div> 
 
-<p>The BOSH Bastion is the <i>jumpbox</i> we will use to access the BOSH Director, and the BOSH Environment in general. It is created using <a href="https://www.terraform.io/">Terraform</a>.</p>
-
-<p>To create a BOSH Bastion, clone the <a href="https://github.com/finkit/bosh-on-gcp">bosh-on-gcp</a> repository, move the service account key into the bosh-on-gcp directory and execute the <code>build-bosh-resources.sh</code> script:</p>
+<p>This creates a VPC Network and subnetwork within the europe-west2 region.</p>
 <div class="terminal-block">
-  <h4 class="terminal-code-text">$ git clone https://github.com/finkit/bosh-on-gcp</h4>
-  <h4 class="terminal-code-text">$ mv gcp-automated-user.key.json bosh-on-gcp/gcp-automated-user.key.json</h4>
-  <h4 class="terminal-code-text">$ cd bosh-on-gcp/terraform</h4>
-  <h4 class="terminal-code-text">$ ./build-bosh-resources.sh -p &lt;YOUR_GCP_PROJECT_NAME&gt;</h4>
+  <h4 class="terminal-code-text">$ gcloud compute networks create bosh --subnet-mode custom</h4>
+  <h4 class="terminal-code-text">$ gcloud compute networks subnets create bosh-europe-west2 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--region=europe-west2 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--range=10.0.0.0/24 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--network=bosh</h4>
 </div>
 
-<p>Should the <code>build-bosh-resources.sh</code> script fail with an error indicating that the region required field is not set, use the command <code>"gcloud config set compute/region &lt;YOUR_GCP_PROJECT_REGION&gt;"</code> (where &lt;YOUR_GCP_PROJECT_REGION&gt; is the region for your project, e.g. europe-west2).</p>
-<p>Should the <code>build-bosh-resources.sh</code> script fail with an error loading the zone, use the command <code>"gcloud config set compute/zone &lt;YOUR_GCP_PROJECT_ZONE&gt;"</code> (where &lt;YOUR_GCP_PROJECT_ZONE&gt; is the zone for your project, e.g. europe-west2-a).</p>
+<p>Create a firewall rule allowing ssh access to the jumpbox instance:</p>
+<div class="terminal-block">
+   <h4 class="terminal-code-text">$ gcloud compute firewall-rules create ssh-to-jumpbox \<br/> 
+     &nbsp;&nbsp;&nbsp;&nbsp;--network bosh \<br/>
+     &nbsp;&nbsp;&nbsp;&nbsp;--allow tcp:22 \<br/>
+     &nbsp;&nbsp;&nbsp;&nbsp;--target-tags jumpbox</h4>
+</div>
+
+<p>Create a firewall rule allowing port 6868 to the jumpbox instance (this is used by the bosh client when creating the jumpbox instance):</p>
+<div class="terminal-block">
+   <h4 class="terminal-code-text">$ gcloud compute firewall-rules create mbus-to-jumpbox \<br/> 
+     &nbsp;&nbsp;&nbsp;&nbsp;--network bosh \<br/>
+     &nbsp;&nbsp;&nbsp;&nbsp;--allow tcp:6868 \<br/>
+     &nbsp;&nbsp;&nbsp;&nbsp;--target-tags jumpbox</h4>
+</div>
+
+<p>Create a firewall rule allowing internal traffic (TCP & UDP) on all ports:</p>
+<div class="terminal-block">
+   <h4 class="terminal-code-text">$ gcloud compute firewall-rules create intra-subnet-subnet-open \<br/>
+     &nbsp;&nbsp;&nbsp;&nbsp;--network bosh \<br/>
+     &nbsp;&nbsp;&nbsp;&nbsp;--allow tcp:1-65535,udp:1-65535 \</br>
+     &nbsp;&nbsp;&nbsp;&nbsp;--source-tags internal</h4>
+</div>
 
 <p>Learn more:
 <ul>
-  <li><a href="https://cloud.google.com/sdk/docs/">cloud.google.com: Cloud SDK</a></li>
-  <li><a href="https://www.terraform.io/docs/index.html">terraform.io: Terraform Documentation</a></li>
+  <li><a href="https://cloud.google.com/compute/docs/networks-and-firewalls">Google VPC Networks & Firewalls</a></li>
+</ul>
+</p>
+</div></div>
+    
+    <div class="section prepare"><div class="center-column"><div class="view-heading">
+  <div class="circle-container">
+    <div class="circle-number">
+      <h2>1</h2>
+    </div>
+  </div>
+  <div class="view-heading-text-container">
+    <h2>Create Google Cloud NAT Instance</h2>
+  </div>
+</div> 
+
+<p>Create a NAT instance.</p>
+<div class="terminal-block">
+  <h4 class="terminal-code-text">$ gcloud compute instances create nat-instance-primary \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--machine-type n1-standard-1 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--zone europe-west2-a \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--tags "nat,internal" \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--image ubuntu-1604-xenial-v20180109 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--image-project ubuntu-os-cloud \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--subnet bosh-europe-west2 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--can-ip-forward \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--tags nat \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--metadata startup-script='#!/bin/bash \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward" \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;iptables -t nat -A POSTROUTING -o ens4 -j MASQUERADE'</h4>
+</div>
+
+<p>Create a route through the NAT instance using the 'no-ip' network tag. Instances tagged with 'no-ip' will route traffic through the nat-instance-primary instance.</p>
+<div class="terminal-block">
+   <h4 class="terminal-code-text">$ gcloud compute routes create nat-primary \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--next-hop-instance nat-instance-primary \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--network bosh \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--tags no-ip \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--priority 800 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--next-hop-instance-zone europe-west2-a \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--destination-range 0.0.0.0/0 \</h4>
+</div>
+
+<p>Learn more:
+<ul>
+  <li><a href="https://cloud.google.com/vpc/docs/special-configurations#natgateway">Google Compute NAT Instances</a></li>
+</ul>
+</p>
+</div></div>
+    
+    <div class="section prepare"><div class="center-column"><div class="view-heading">
+  <div class="circle-container">
+    <div class="circle-number">
+      <h2>1</h2>
+    </div>
+  </div>
+  <div class="view-heading-text-container">
+    <h2>Create BOSH Jumpbox</h2>
+  </div>
+</div> 
+
+<p>Create an External IP address for the jumpbox.</p>
+<div class="terminal-block">
+   <h4 class="terminal-code-text">$ gcloud compute addresses create jumpbox-ip \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--region europe-west2</h4>
+   <h4 class="terminal-code-text">$ gcloud compute addresses list</h4>
+</div>
+
+<p>Clone the BOSH jumpbox deployment</p>
+<div class="terminal-block">
+   <h4 class="terminal-code-text">$ git clone https://github.com/cppforlife/jumpbox-deployment</h4>
+</div>
+
+<p>BOSH deploy your jumpbox:</p>
+<div class="terminal-block">
+   <h4 class="terminal-code-text">$ bosh create-env ./jumpbox-deployment/jumpbox.yml \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--state ./jumpbox-state.json \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--vars-store ./jumpbox-creds.yml \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-o ./jumpbox-deployment/gcp/cpi.yml \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v zone=europe-west2-a \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v network=bosh \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v subnetwork=bosh-europe-west2 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v internal_cidr=10.0.0.0/24 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v internal_gw=10.0.0.1 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v internal_ip=10.0.0.3 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v external_ip=&lt;EXTERNAL_IP&gt; \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v tags=[jumpbox,internal] \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v project_id=&lt;PROJECT_ID&gt; \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--var-file gcp_credentials_json=my-service-account.key.json</h4>
+</div>
+
+<p>Extract the private key of the jumpbox instance from the credentials file created by BOSH:</p>
+<div class="terminal-block">
+    <h4 class="terminal-code-text">$ bosh int ./jumpbox-creds.yml --path /jumpbox_ssh/private_key > jumpbox.key \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;&& chmod 600 jumpbox.key</h4>
+</div>
+
+<p>Open a socks5 tunnel and export the tunnel configuration for BOSH CLI to use:</p>
+<div class="terminal-block">
+    <h4 class="terminal-code-text">$ ssh -4 -D 5000 -fNC jumpbox@&lt;EXTERNAL_IP&gt; -i jumpbox.key</h4>
+    <h4 class="terminal-code-text">$ export BOSH_ALL_PROXY=socks5://localhost:5000</h4>
+</div>
+
+<p>Learn more:
+<ul>
+  <li><a href="https://bosh.io/docs/cli-tunnel.html">BOSH CLI Tunneling</a></li>
+  <li><a href="https://github.com/cppforlife/jumpbox-deployment">BOSH Jumpbox Deployment</a></li>
 </ul>
 </p>
 </div></div>
@@ -174,17 +298,37 @@
   </div>
 </div> 
 
-<p>To create the BOSH Director, ssh into the BOSH Bastion VM and execute the <code>create-bosh-director.sh</code> script:</p>
+<p>To create the BOSH Director, execute the following commands:</p>
 <div class="terminal-block">
-  <h4 class="terminal-code-text">$ gcloud compute ssh bosh-bastion</h4>
-  <h4 class="terminal-code-text">$ . ./create-bosh-director.sh</h4>
+  <h4 class="terminal-code-text">$ bosh int bosh-deployment/bosh.yml \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--vars-store=./director-creds.yml \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-o ./bosh-deployment/gcp/cpi.yml \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v director_name=gcpbosh \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v internal_cidr=10.0.0.0/24 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v internal_gw=10.0.0.1 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v internal_ip=10.0.0.6 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--var-file gcp_credentials_json=./my-service-account.key.json \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v project_id=&lt;PROJECT_ID&gt; \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v zone=europe-west2-a \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v tags=[internal,no-ip] \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v network=bosh \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v subnetwork=bosh-europe-west2</h4>
+
+  <h4 class="terminal-code-text">$ bosh create-env bosh-deployment/bosh.yml \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--state=./director-state.json \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--vars-store=./director-creds.yml \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-o ./bosh-deployment/gcp/cpi.yml \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v director_name=gcpbosh \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v internal_cidr=10.0.0.0/24 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v internal_gw=10.0.0.1 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v internal_ip=10.0.0.6 \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;--var-file gcp_credentials_json=./my-service-account.key.json \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v project_id=&lt;PROJECT_ID&gt; \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v zone=europe-west2-a \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v tags=[internal,no-ip] \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v network=bosh \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v subnetwork=bosh-europe-west2</h4>
 </div>
-
-<p>Note the extra leading '.' in front of the create-bosh-director.sh command, this is intentional and will cause the script to be run in the current shell.</p>
-
-<p>The creation of the BOSH Director will take a few minutes, and you will be prompted to enter the passphrase for the generation of a public/private rsa key pair.</p>
-
-<p>In case of any issues see <a href="https://github.com/finkit/bosh-on-gcp/terraform/README.md">bosh-on-gcp create BOSH Director</a> docs.</p>
 
 <p>Learn more:
 <ul>
@@ -204,13 +348,12 @@
   </div>
 </div> 
 
-<p>The final steps of the create-bosh-director.sh script are to create an alias for the BOSH Environment and set the BOSH_ENVIRONMENT, BOSH_CLIENT and BOSH_CLIENT_SECRET environment variables, which make it easier to interact with:</p>
+<p>Create the BOSH_ENVIRONMENT, BOSH_CLIENT and BOSH_CLIENT_SECRET environment variables, which make it easier to interact with:</p>
 <div class="terminal-block">
-  <h4 class="terminal-code-text">$ # No need to execute the following commands</h4>
-  <h4 class="terminal-code-text">$ # bosh alias-env bosh-director -e 10.0.0.6 --ca-cert <(bosh int ./creds.yml --path /director_ssl/ca)</h4>
-  <h4 class="terminal-code-text">$ # export BOSH_ENVIRONMENT=bosh-director</h4>
-  <h4 class="terminal-code-text">$ # export BOSH_CLIENT=admin</h4>
-  <h4 class="terminal-code-text">$ # export BOSH_CLIENT_SECRET=`bosh int ./creds.yml --path /admin_password`</h4>
+  <h4 class="terminal-code-text">$ bosh alias-env bosh-director -e 10.0.0.6 --ca-cert <(bosh int ./director-creds.yml --path /director_ssl/ca)</h4>
+  <h4 class="terminal-code-text">$ export BOSH_ENVIRONMENT=bosh-director</h4>
+  <h4 class="terminal-code-text">$ export BOSH_CLIENT=admin</h4>
+  <h4 class="terminal-code-text">$ export BOSH_CLIENT_SECRET=$(bosh int ./director-creds.yml --path /admin_password)</h4>
 </div>
 
 <p>Running bosh env should return details of the BOSH Director, similar to:</p>
@@ -411,7 +554,7 @@ Succeeded</h4>
 
 <p>See that our service is up and running.</p>
 <div class="terminal-block">
-  <h4 class="terminal-code-text">$ curl 10.0.0.10:8080</h4>
+  <h4 class="terminal-code-text">$ curl http://10.0.0.10:8080 --proxy socks5://127.0.0.1:5000</h4>
   <h4 class="terminal-printout-text">Hello, Anonymous from &lt;uuid&gt;</h4>
 </div>
 
@@ -454,7 +597,7 @@ Succeeded</h4>
 
 <p>See that the updated version was deployed:</p>
 <div class="terminal-block">
-  <h4 class="terminal-code-text">$ curl 10.0.0.10:8080</h4>
+  <h4 class="terminal-code-text">$ curl http://10.0.0.10:8080 --proxy socks5://127.0.0.1:5000</h4>
   <h4 class="terminal-printout-text">Hello, [your name] from &lt;uuid&gt;</h4>
 </div>
 </div></div>
@@ -497,9 +640,9 @@ Succeeded</h4>
 
 <p>See that we have 2 instances of our service running:</p>
 <div class="terminal-block">
-  <h4 class="terminal-code-text">$ curl 10.0.0.10:8080</h4>
+  <h4 class="terminal-code-text">$ curl http://10.0.0.10:8080 --proxy socks5://127.0.0.1:5000</h4>
   <h4 class="terminal-printout-text">Hello, [your name] from &lt;uuid-1&gt;</h4>
-  <h4 class="terminal-code-text">$ curl 10.0.0.11:8080</h4>
+  <h4 class="terminal-code-text">$ curl http://10.0.0.11:8080 --proxy socks5://127.0.0.1:5000</h4>
   <h4 class="terminal-printout-text">Hello, [your name] from &lt;uuid-2&gt;</h4>
 </div>
 </div></div>
@@ -535,9 +678,9 @@ Succeeded</h4>
 
 <p>Let's see that our property was changed:</p>
 <div class="terminal-block">
-  <h4 class="terminal-code-text">$ curl 10.0.0.10:8888</h4>
+  <h4 class="terminal-code-text">$ curl http://10.0.0.10:8888 --proxy socks5://127.0.0.1:5000</h4>
   <h4 class="terminal-printout-text">Hello, [your name] from &lt;uuid-1&gt;</h4>
-  <h4 class="terminal-code-text">$ curl 10.0.0.11:8888</h4>
+  <h4 class="terminal-code-text">$ curl http://10.0.0.11:8888 --proxy socks5://127.0.0.1:5000</h4>
   <h4 class="terminal-printout-text">Hello, [your name] from &lt;uuid-1&gt;</h4>
 </div>
 </div></div>
@@ -576,7 +719,7 @@ System 'system_localhost'           running
 <p>In a separate window (on host) let's kill our runnning server:</p>
 
 <div class="terminal-block">
-  <h4 class="terminal-code-text">$ curl 10.0.0.10:8888/kill</h4>
+  <h4 class="terminal-code-text">$ curl http://10.0.0.10:8888/kill --proxy socks5://127.0.0.1:5000</h4>
 </div>
 
 <p>Back in the instance window notice that monit will report process as 'Does not exist' and after some period service will be brought back up by monit again.</p>
@@ -600,12 +743,7 @@ System 'system_localhost'           running
 
 <p>What if there is a problem with instance that is running our service? BOSH offers manual and automatic recovery when there are problems with infrastructure resources like VMs or disks. In this exercise we are going to kill one of our instances and use manual recovery option.</p>
 
-<p>Lets destroy one of our instances. SSH to BOSH Bastion VM.</p>
-
-<div class="terminal-block">
-  <h4 class="terminal-code-text">$ gcloud compute ssh bosh-bastion</h4>
-</div>
-
+<p>Lets destroy one of our instances.</p>
 <p>Delete the second instance - the name of this VM instance can be found under the NAME column from the output of the first command below.</p>
 
 <div class="terminal-block">
@@ -725,12 +863,12 @@ app/guid-2  unresponsive agent  10.0.0.11
 
 <p>Re-deploy and see that it now succeeds.</p>
 
-<p>Now running <b>curl -L http://10.0.0.12:8080</b> should give us responses from different servers.</p>
+<p>Now running <b>curl -L http://10.0.0.12:8080 --proxy socks5://127.0.0.1:5000</b> should give us responses from different servers.</p>
 </div></div>
     
     <div class="section last"><div class="center-column"><h1>Done!</h1>
 
-<p>In this tutorial we created a BOSH Bastion in Google Cloud Platform and used the BOSH CLI on that bastion to create a BOSH Director. We deployed a release, updated our deployment with source changes, scaled the number of services and changed their properties on that BOSH Director. We also recovered a failing service, failing VM and failing deploy.</p>
+<p>In this tutorial we created the necessary infrastructure in Google Cloud Platform and used the BOSH CLI to create the BOSH Jumpbox in order to create a BOSH Director. We deployed a release, updated our deployment with source changes, scaled the number of services and changed their properties on that BOSH Director. We also recovered a failing service, failing VM and failing deploy.</p>
 
 <p>The BOSH Director can work with any CPI (Cloud Provider Interface) that implements a certain API to manage IaaS resources. There are several supported CPIs for different IaaS providers: AWS, GCP, Openstack, vSphere, vCloud and VirtualBox (a.k.a. BOSH Lite). You can read more about CPIs here: <a href="http://bosh.io/docs/cpi-api-v1.html">http://bosh.io/docs/cpi-api-v1.html</a>.</p>
 

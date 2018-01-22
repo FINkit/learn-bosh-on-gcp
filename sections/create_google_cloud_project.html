@@ -7,7 +7,7 @@
 
 <p>Create a GCP Project (the project name must be unique) and assign it to your Billing Account (you may be prompted to install the "alpha" component):</p>
 <div class="terminal-block">
-  <h4 class="terminal-code-text">$ gcloud alpha projects create &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+  <h4 class="terminal-code-text">$ gcloud projects create &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;--name=&lt;YOUR_GCP_PROJECT_NAME&gt; --set-as-default</h4>
   <h4 class="terminal-code-text">$ gcloud alpha billing projects link &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;--billing-account=&lt;YOUR_BILLING_ACCOUNT&gt;</h4>
@@ -18,29 +18,29 @@
   <h4 class="terminal-code-text">$ gcloud alpha billing accounts list --format json</h4>
 </div>
 
-<p>Enable the compute.googleapis.com, iam.googleapis.com>, cloudresourcemanager.googleapis.com and dns.googleapis.com Google Cloud APIs (you may be prompted to install the "beta" component):</p>
+<p>Enable the compute.googleapis.com, iam.googleapis.com, cloudresourcemanager.googleapis.com and dns.googleapis.com Google Cloud APIs:</p>
 <div class="terminal-block">
-  <h4 class="terminal-code-text">$ gcloud beta --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+  <h4 class="terminal-code-text">$ gcloud --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;services enable compute.googleapis.com</h4>
-  <h4 class="terminal-code-text">$ gcloud beta --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+  <h4 class="terminal-code-text">$ gcloud --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;services enable iam.googleapis.com</h4>
-  <h4 class="terminal-code-text">$ gcloud beta --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+  <h4 class="terminal-code-text">$ gcloud --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;services enable cloudresourcemanager.googleapis.com</h4>
-  <h4 class="terminal-code-text">$ gcloud beta --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
+  <h4 class="terminal-code-text">$ gcloud --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;services enable dns.googleapis.com</h4>
 </div>
 
-<p>Create a Service Account, e.g. <i>gcp-automated-user</i>, generate keys for that Service Account and make it a Project Owner:</p>
+<p>Create a Service Account, e.g. <i>my-service-account</i>, generate keys for that Service Account and make it a Project Owner:</p>
 <div class="terminal-block">
   <h4 class="terminal-code-text">$ gcloud iam --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
-    &nbsp;&nbsp;&nbsp;&nbsp;service-accounts create gcp-automated-user \<br/>
-    &nbsp;&nbsp;&nbsp;&nbsp;--display-name=gcp-automated-user</h4>
+    &nbsp;&nbsp;&nbsp;&nbsp;service-accounts create my-service-account \<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;--display-name=my-service-account</h4>
   <h4 class="terminal-code-text">$ gcloud iam --project &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;service-accounts keys create \<br/>
-    &nbsp;&nbsp;&nbsp;&nbsp;--iam-account=gcp-automated-user@&lt;YOUR_GCP_PROJECT_NAME&gt;.iam.gserviceaccount.com \<br/>
-    &nbsp;&nbsp;&nbsp;&nbsp;gcp-automated-user.key.json</h4>
+    &nbsp;&nbsp;&nbsp;&nbsp;--iam-account=my-service-account@&lt;YOUR_GCP_PROJECT_NAME&gt;.iam.gserviceaccount.com \<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;my-service-account.key.json</h4>
   <h4 class="terminal-code-text">$ gcloud projects add-iam-policy-binding &lt;YOUR_GCP_PROJECT_NAME&gt; \<br/>
-    &nbsp;&nbsp;&nbsp;&nbsp;--member=serviceAccount:gcp-automated-user@&lt;YOUR_GCP_PROJECT_NAME&gt;.iam.gserviceaccount.com \<br/>
+    &nbsp;&nbsp;&nbsp;&nbsp;--member=serviceAccount:my-service-account@&lt;YOUR_GCP_PROJECT_NAME&gt;.iam.gserviceaccount.com \<br/>
     &nbsp;&nbsp;&nbsp;&nbsp;--role=roles/owner</h4>
 </div>
 
