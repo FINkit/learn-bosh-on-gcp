@@ -2,6 +2,9 @@
 
 <p>To create the BOSH Director, execute the following commands:</p>
 <div class="terminal-block">
+  <h4 class="terminal-code-text">$ git clone https://github.com/cloudfoundry/bosh-deployment</h4>
+</div>
+<div class="terminal-block">
   <h4 class="terminal-code-text">$ bosh int bosh-deployment/bosh.yml \<br/>
       &nbsp;&nbsp;&nbsp;&nbsp;--vars-store=./director-creds.yml \<br/>
       &nbsp;&nbsp;&nbsp;&nbsp;-o ./bosh-deployment/gcp/cpi.yml \<br/>

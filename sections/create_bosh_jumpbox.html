@@ -1,6 +1,6 @@
 <%= circled_title(1, "Create BOSH Jumpbox") %>
 
-<p>Create an External IP address for the jumpbox.</p>
+<p>Create an External IP address for the BOSH Jumpbox.</p>
 <div class="terminal-block">
    <h4 class="terminal-code-text">$ gcloud compute addresses create jumpbox-ip \<br/>
       &nbsp;&nbsp;&nbsp;&nbsp;--region europe-west2</h4>
@@ -24,7 +24,7 @@
       &nbsp;&nbsp;&nbsp;&nbsp;-v internal_cidr=10.0.0.0/24 \<br/>
       &nbsp;&nbsp;&nbsp;&nbsp;-v internal_gw=10.0.0.1 \<br/>
       &nbsp;&nbsp;&nbsp;&nbsp;-v internal_ip=10.0.0.3 \<br/>
-      &nbsp;&nbsp;&nbsp;&nbsp;-v external_ip=&lt;EXTERNAL_IP&gt; \<br/>
+      &nbsp;&nbsp;&nbsp;&nbsp;-v external_ip=&lt;JUMPBOX_EXTERNAL_IP&gt; \<br/>
       &nbsp;&nbsp;&nbsp;&nbsp;-v tags=[jumpbox,internal] \<br/>
       &nbsp;&nbsp;&nbsp;&nbsp;-v project_id=&lt;PROJECT_ID&gt; \<br/>
       &nbsp;&nbsp;&nbsp;&nbsp;--var-file gcp_credentials_json=my-service-account.key.json</h4>
@@ -38,7 +38,11 @@
 
 <p>Open a socks5 tunnel and export the tunnel configuration for BOSH CLI to use:</p>
 <div class="terminal-block">
-    <h4 class="terminal-code-text">$ ssh -4 -D 5000 -fNC jumpbox@&lt;EXTERNAL_IP&gt; -i jumpbox.key</h4>
+    <h4 class="terminal-code-text">$ ssh -4 -D 5000 -fNC jumpbox@&lt;JUMPBOX_EXTERNAL_IP&gt; -i jumpbox.key</h4>
+</div>
+
+<p>Export BOSH_ALL_PROXY to ensure bosh commands go via the BOSH Jumpbox</p>
+<div class="terminal-block">
     <h4 class="terminal-code-text">$ export BOSH_ALL_PROXY=socks5://localhost:5000</h4>
 </div>
 
