@@ -1,12 +1,11 @@
 <%= circled_title(4, "Log in") %>
 
-<p>The final steps of the create-bosh-director.sh script are to create an alias for the BOSH Environment and set the BOSH_ENVIRONMENT, BOSH_CLIENT and BOSH_CLIENT_SECRET environment variables, which make it easier to interact with:</p>
+<p>Create the BOSH_ENVIRONMENT, BOSH_CLIENT and BOSH_CLIENT_SECRET environment variables, which make it easier to interact with:</p>
 <div class="terminal-block">
-  <h4 class="terminal-code-text">$ # No need to execute the following commands</h4>
-  <h4 class="terminal-code-text">$ # bosh alias-env bosh-director -e 10.0.0.6 --ca-cert <(bosh int ./creds.yml --path /director_ssl/ca)</h4>
-  <h4 class="terminal-code-text">$ # export BOSH_ENVIRONMENT=bosh-director</h4>
-  <h4 class="terminal-code-text">$ # export BOSH_CLIENT=admin</h4>
-  <h4 class="terminal-code-text">$ # export BOSH_CLIENT_SECRET=`bosh int ./creds.yml --path /admin_password`</h4>
+  <h4 class="terminal-code-text">$ bosh alias-env bosh-director -e 10.0.0.6 --ca-cert <(bosh int ./director-creds.yml --path /director_ssl/ca)</h4>
+  <h4 class="terminal-code-text">$ export BOSH_ENVIRONMENT=bosh-director</h4>
+  <h4 class="terminal-code-text">$ export BOSH_CLIENT=admin</h4>
+  <h4 class="terminal-code-text">$ export BOSH_CLIENT_SECRET=$(bosh int ./director-creds.yml --path /admin_password)</h4>
 </div>
 
 <p>Running bosh env should return details of the BOSH Director, similar to:</p>
